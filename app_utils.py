@@ -28,23 +28,29 @@ class CurriculumManagement:
     def is_acyclic(self):
         """ 사이클이 존재하는지 판단. 있으면 True """
 
-        # 만약 특정 marker일 때 marker가 같은 칸에 도착했다면, 그건 사이클이 존재한다는 것이다.
+        # 만약 특정 마커일 때 마커가 같은 칸에 도착했다면, 그건 사이클이 존재한다는 것이다.
 
+        # visited: 마커 저장
         visited = {subject_id: 0 for subject_id in self.subjects.index}
         marker = 1
 
+        # 모든 과목에 마커 표시
         for subject_id in self.subjects.index:
 
+            # 이미 마커 있으면 탐색 필요 없음
             if visited[subject_id]:
                 continue
-
+            
             queue = deque([subject_id])
-
+            
             while queue:
-
                 now = queue.popleft()
+
+                # 마커 같은 과목 만나면 사이클 존재 취급
                 if visited[now] == marker:
                     return True
+
+                # 이미 마커 있으면 탐색 필요 없음
                 if visited[now]:
                     continue
 
@@ -52,6 +58,7 @@ class CurriculumManagement:
 
                 queue.extend(self.children[now])
 
+            # 마커 변경
             marker += 1
 
         return False
@@ -59,9 +66,10 @@ class CurriculumManagement:
     def easier_order(self):
         """ 쉬운 과목을 최대한 먼저 배치하는 최적의 커리큘럼을 제안 """
 
-        # visited:
+        # visited: 우선순위 큐에 들어갔는지 여부를 저장
         visited = {subject_id: False for subject_id in self.subjects.index}
 
+        # 선이수과목 없는 과목을 우선순위 큐에 넣음
         min_heap = []
         for subject_id in self.subjects.index:
             if not self.parents[subject_id]:
@@ -72,17 +80,23 @@ class CurriculumManagement:
         order = [None] * len(self.subjects.index)
         i = 0
 
+        # order를 채우기
         while min_heap:
-            print(min_heap)
+            
+            # print(min_heap)
+
+            # 우선순위 큐에서 난이도 최소 과목 꺼내기
             _, subject_id = heapq.heappop(min_heap)
             order[i] = subject_id
             i += 1
 
+            # 우선순위 큐에 배울 수 있는 과목 넣기
             for next_id in self.children[subject_id]:
 
                 if visited[next_id]:
                     continue
 
+                # 선이수과목을 충족했는지 확인하고, 충족했으면 우선순위 큐에 넣기
                 can_learn_next = True
                 for condition in self.parents[next_id]:
                     if not visited[condition]:
